@@ -1,3 +1,4 @@
+import os
 from fastapi import Depends, FastAPI, Body, HTTPException, Path, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
@@ -10,8 +11,13 @@ from models.product import Product as ProductModel
 from models.order import Order as OrderModel
 from models.user import User as UserModel
 from fastapi.encoders import jsonable_encoder
+import uvicorn
 
-
+#En el archivo main.py agregan 
+#Deben importar os y uvicorn
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0",
+                port=int(os.environ.get("PORT", 8000)))
 
 app = FastAPI()
 app.title = "Mi aplicación con  FastAPI"
