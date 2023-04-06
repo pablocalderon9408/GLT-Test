@@ -83,7 +83,6 @@ def signup(user: SignUpUser):
     token: str = create_token(jsonable_encoder(new_user))
     # Send email.
     email_sent = send_confirmation_email(EmailSchema(email=[user.email]))
-    import ipdb ; ipdb.set_trace()
     return JSONResponse(status_code=201, content={"message": "Se ha registrado el usuario"})
 
 @app.post('/validate', tags=['auth'])
