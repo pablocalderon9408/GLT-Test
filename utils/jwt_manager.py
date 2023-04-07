@@ -1,17 +1,31 @@
+import os
+import requests
+
+# Envs
+from dotenv import load_dotenv
+
+# JWT
 from jwt import encode, decode
+
+# Typing
 from typing import List
 
-from fastapi import BackgroundTasks, FastAPI
-from pydantic import BaseModel, EmailStr
-from starlette.responses import JSONResponse
+# FastAPI
 from fastapi import HTTPException, Request
 from fastapi.security import HTTPBearer
 
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
-
+# Models
 from users.models import User as UserModel
+
+# Database
 from config.database import Session
 
+# Load environ needed variables.
+load_dotenv()
+from_email = os.getenv("FROM_EMAIL")
+api_key = os.getenv("SENDGRID_API_KEY")
+email_name = os.getenv("EMAIL_NAME")
+url = os.getenv("URL_EMAIL_SERVICE")
 
 class JWTBearer(HTTPBearer):
     """
@@ -28,7 +42,6 @@ class JWTBearer(HTTPBearer):
                 raise HTTPException(status_code=403, detail="Credenciales son invalidas")
 
 
-
 def create_token(data: dict) -> str:
     token: str = encode(payload=data, key="my_secret_key", algorithm="HS256")
     return token
@@ -38,45 +51,50 @@ def validate_token(token: str) -> dict:
     return data
 
 
-# class EmailSchema(BaseModel):
-#     email: List[EmailStr]
+def send_email(email, token):
+    """
+    Email is sent to user to validate the email.
+    """
 
+    # Dictionary structure is given by the SendGrid API.
+    # https://docs.sendgrid.com/for-developers/sending-email/api-getting-started
+    data = {
+        "personalizations":[
+            {
+                "to":[
+                    {
+                        "email": email,
+                        "name":"John Doe"
+                    }
+                    ],
+                "subject": f"Hello!! Welcome to the app! Use this token: {token} to validate your email."
+            }
+        ],
+        "content": [
+            {
+                "type": "text/plain", 
+                "value": "Heya!"
+            }
+            ],
+        "from":{
+            "email":from_email,
+            "name":email_name
+        },
+        "reply_to":{
+            "email":from_email,
+            "name":email_name
+        }
+    }
 
-conf = ConnectionConfig(
-    MAIL_USERNAME ="username",
-    MAIL_PASSWORD = "admin123",
-    MAIL_FROM = "test@email.com",
-    MAIL_PORT = 465,
-    MAIL_SERVER = "mail server",
-    MAIL_STARTTLS = False,
-    MAIL_SSL_TLS = True,
-    USE_CREDENTIALS = True,
-    VALIDATE_CERTS = True
-)
+    # Headers are given by the SendGrid API. Note the Bearer.
+    headers = {
+        "Authorization": "Bearer " + api_key,
+    }
 
-def send_confirmation_email(new_user_info, token):
-    import ipdb ; ipdb.set_trace()
-    db = Session()
-    email = new_user_info["email"]
-    user = db.query(UserModel).filter(UserModel.email == email).first()
-    decoded_token = validate_token(token)
-    import ipdb ; ipdb.set_trace()
-    if user and decoded_token:
-        user.is_validated = True
-        db.commit()
-        db.refresh(user)
-        return JSONResponse(status_code=200, content={"message": "email has been validated"})
-    # html = """
-    # <p>Thanks for using Fastapi-mail</p> 
-    # """
-
-    # message = MessageSchema(
-    #     subject="Fastapi-Mail module",
-    #     recipients=email.dict().get("email"),
-    #     body=html,
-    #     subtype=MessageType.html)
-
-    # fm = FastMail(conf)
-    # await fm.send_message(message)
-    # print(fm.send_message(message))
-    return JSONResponse(status_code=200, content={"message": "email has been sent"}) 
+    # Facilitate the testing.
+    print(token)
+    response = requests.post(url, json=data, headers=headers)
+    if response.status_code == 202:
+        return True
+    else:
+        return False

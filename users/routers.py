@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 # Typing
 from typing import List
 
@@ -16,7 +18,7 @@ from users.schemas import SignUpUser, LoginUser
 from config.database import Session
 
 # JWT
-from utils.jwt_manager import create_token, send_confirmation_email
+from utils.jwt_manager import create_token, send_email, validate_token
 # from utils.jwt_manager import EmailSchema
 from middlewares.jwt_bearer import JWTBearer
 
@@ -24,7 +26,6 @@ users_router = APIRouter()
 
 @users_router.post('/signup', tags=['auth'])
 def signup(user: SignUpUser):
-    # Password validation.
     if user.password != user.password_confirmation:
         return JSONResponse(status_code=400, content={"message": "Las contraseñas no coinciden"})
     # Do not allow repeated emails.
@@ -40,17 +41,19 @@ def signup(user: SignUpUser):
     new_user['email'] = user.email
     new_user['password'] = user.password
     token: str = create_token(new_user)
-    # Send email.
-    import ipdb ; ipdb.set_trace()
-    email_sent = send_confirmation_email(new_user, token)
+    send_email(user.email, token)
     return JSONResponse(status_code=201, content={"message": "Se ha registrado el usuario"})
 
 
 @users_router.post('/validate', tags=['auth'])
-def validate(token: str, user: SignUpUser):
-    # Validate email.
+def validate(token: str):
+    # Decode token.
+    decoded_token = validate_token(token)
+    if not decoded_token:
+        return JSONResponse(status_code=401, content={"message": "El token no es válido"})
+    email = decoded_token['email']
     db = Session()
-    user = db.query(UserModel).filter(UserModel.email == user.email).first()
+    user = db.query(UserModel).filter(UserModel.email == email).first()
     if not user:
         return JSONResponse(status_code=404, content={"message": "El usuario no existe"})
     user.is_validated = True
