@@ -1,8 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from config.database import Base
-from models.utils import BaseModel
-from models.user import User
+from utils.utils import BaseModel
 
 
 class Order(BaseModel):
