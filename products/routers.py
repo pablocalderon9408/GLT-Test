@@ -1,5 +1,3 @@
-import os
-
 # Typing
 from typing import List
 
@@ -22,7 +20,12 @@ from config.database import Session
 product_router = APIRouter()
 
 
-@product_router.get('/products', tags=['products'], response_model=List[Product], status_code=200)
+@product_router.get(
+        path='/products',
+        tags=['products'],
+        response_model=List[Product],
+        status_code=200
+        )
 def get_products() -> List[Product]:
     """
     Get all products.
@@ -30,14 +33,22 @@ def get_products() -> List[Product]:
     Returns:
     --------
     List[Product]
-        A list of Product objects containing information about each product in the database.
+        A list of Product objects containing information
+        about each product in the database.
     """
     db = Session()
     products = db.query(ProductModel).all()
-    return JSONResponse(status_code=200, content=jsonable_encoder(products))
+    return JSONResponse(
+        status_code=200,
+        content=jsonable_encoder(products)
+        )
 
 
-@product_router.get('/products/{id}', tags=['products'], response_model=Product)
+@product_router.get(
+        path='/products/{id}',
+        tags=['products'],
+        response_model=Product
+        )
 def get_product(id: int = Path(ge=1, le=2000)) -> Product:
     """
     Get a specific product by ID.
@@ -49,11 +60,26 @@ def get_product(id: int = Path(ge=1, le=2000)) -> Product:
         Product: The product with the specified ID.
     """
     db = Session()
-    product = db.query(ProductModel).filter(ProductModel.id == id).first()
-    return JSONResponse(content=jsonable_encoder(product))
+    product = db.query(ProductModel).filter(
+        ProductModel.id == id
+        ).first()
+    if not product:
+        return JSONResponse(
+            status_code=404,
+            content={"message": "El producto no existe"}
+            )
+    return JSONResponse(
+        status_code=200,
+        content=jsonable_encoder(product)
+        )
 
 
-@product_router.post('/products', tags=['products'], response_model=dict, status_code=201)
+@product_router.post(
+        '/products',
+        tags=['products'],
+        response_model=dict,
+        status_code=201
+        )
 def create_product(product: Product) -> dict:
     """
     Create a new product.
@@ -66,17 +92,26 @@ def create_product(product: Product) -> dict:
     Returns:
     --------
     - dict:
-        A dictionary containing a success message indicating the product has been registered.
+        A dictionary containing a success message
+        indicating the product has been registered.
     """
     db = Session()
     new_product = ProductModel(**product.dict())
     db.add(new_product)
     db.commit()
-    return JSONResponse(status_code=201, content={"message": "Se ha registrado el producto"})
+    return JSONResponse(
+        status_code=201,
+        content={"message": "Se ha registrado el producto"}
+        )
 
 
-@product_router.put('/products/{id}', tags=['products'], response_model=dict, status_code=200)
-def update_product(id: int, product: Product)-> dict:
+@product_router.put(
+        '/products/{id}',
+        tags=['products'],
+        response_model=dict,
+        status_code=200
+        )
+def update_product(id: int, product: Product) -> dict:
     """
     Update a product by ID.
 
@@ -88,20 +123,31 @@ def update_product(id: int, product: Product)-> dict:
     - dict: A dictionary containing a success message.
 
     Raises:
-    - HTTPException 404: If the specified product ID does not exist.
+    - HTTPException 404: If the specified product ID
+    does not exist.
     """
     db = Session()
-    product_to_update = db.query(ProductModel).filter(ProductModel.id == id).first()
+    product_to_update = db.query(ProductModel).filter(
+        ProductModel.id == id
+        ).first()
     product_to_update.name = product.name
     product_to_update.description = product.description
     product_to_update.price = product.price
     product_to_update.stock = product.stock
     db.commit()
-    return JSONResponse(status_code=200, content={"message": "Se ha modificado el producto"})
+    return JSONResponse(
+        status_code=200,
+        content={"message": "Se ha modificado el producto"}
+        )
 
 
-@product_router.delete('/products/{id}', tags=['products'], response_model=dict, status_code=200)
-def delete_product(id: int)-> dict:
+@product_router.delete(
+        path='/products/{id}',
+        tags=['products'],
+        response_model=dict,
+        status_code=200
+    )
+def delete_product(id: int) -> dict:
     """
     Delete a product by id.
 
@@ -109,10 +155,16 @@ def delete_product(id: int)-> dict:
     - id (int): Product id to be deleted.
 
     Returns:
-    - dict: Dictionary containing a message indicating that the product was deleted successfully.
+    - dict: Dictionary containing a message indicating
+    that the product was deleted successfully.
     """
     db = Session()
-    product_to_delete = db.query(ProductModel).filter(ProductModel.id == id).first()
+    product_to_delete = db.query(ProductModel).filter(
+        ProductModel.id == id
+        ).first()
     db.delete(product_to_delete)
     db.commit()
-    return JSONResponse(status_code=200, content={"message": "Se ha eliminado el producto"})
+    return JSONResponse(
+        status_code=200,
+        content={"message": "Se ha eliminado el producto"}
+        )

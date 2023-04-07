@@ -2,6 +2,7 @@ from sqlalchemy import Boolean, Column, Integer, String
 from sqlalchemy.orm import relationship
 from utils.utils import BaseModel
 
+
 class User(BaseModel):
     """
     Model representing a user.
@@ -19,7 +20,8 @@ class User(BaseModel):
     is_validated : bool
         Flag indicating whether the user's email has been validated.
     orders : List[Order]
-        One-to-many relationship with the Order model, representing the orders placed by the user.
+        One-to-many relationship with the Order model, representing
+        the orders placed by the user.
     """
 
     __tablename__ = "users"

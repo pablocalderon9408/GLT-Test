@@ -20,7 +20,8 @@ class Product(BaseModel):
     stock : int
         Stock quantity of the product.
     orders : List[OrderProducts]
-        One-to-many relationship with the OrderProducts model, representing the orders associated with the product.
+        One-to-many relationship with the OrderProducts model,
+        representing the orders associated with the product.
     """
 
     __tablename__ = "product"

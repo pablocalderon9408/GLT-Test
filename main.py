@@ -2,13 +2,8 @@ import os
 import uvicorn
 
 
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse
-from fastapi.security import HTTPBearer
-
-
-from utils.jwt_manager import validate_token
-from config.database import engine, Base, Session
+from fastapi import FastAPI
+from config.database import engine, Base
 
 
 # Routers
@@ -16,11 +11,7 @@ from products.routers import product_router
 from orders.routers import order_router
 from users.routers import users_router
 
-# Models
-from users.models import User as UserModel
 
-#En el archivo main.py agregan 
-#Deben importar os y uvicorn
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0",
                 port=int(os.environ.get("PORT", 8000)))
